@@ -90,17 +90,16 @@ def fetch_cpi(code):
 def fetch_usd_per_local(code):
     if code == "USA":
         return None  # Exactly 1 USD per USD; no IMF series needed.
-    # IFS series is quoted in local-currency units per USD. Invert it.
-    candidates = [
-        ("IMF.STA/IFS", f"{code}.XDC_USD_PA_RT.M"),
-        ("IMF.STA/IFS", f"{code}.XDC_USD_PA_RT.*.M"),
-    ]
+    # IMF ER monthly period-average rate: USD per one domestic currency.
+    # Direct quote means no inversion is needed.
     errors = []
-    for flow, key in candidates:
+    for flow, key in [
+        ("IMF.STA/ER", f"{code}.USD_XDC.PA_RT.M"),
+    ]:
         try:
-            s = monthly_series(imf_csv(flow, key), code, "XDC_USD_PA_RT")
-            if len(s) >= 2:
-                return 1.0 / s
+            series = monthly_series(imf_csv(flow, key), code, "USD_XDC")
+            if len(series) >= 2:
+                return series
         except (requests.RequestException, ValueError, pd.errors.ParserError) as exc:
             errors.append(str(exc))
     raise ValueError(f"No usable monthly exchange-rate observations for {code}. " + "; ".join(errors[:1]))
@@ -206,4 +205,4 @@ st.download_button("Download complete sample as CSV", export.to_csv(index=False)
 with st.expander("View calculations and underlying data"):
     st.dataframe(export, use_container_width=True)
     st.write("Manual check: for any row, multiply S by Country 1 CPI and divide by Country 2 CPI. Then divide that RER by the sample-average RER and multiply by 100.")
-    st.write("IMF data: CPI (IMF.STA/CPI) and IFS exchange rates (IMF.STA/IFS), SDMX 3.0 API. Exchange rates quoted as local units per USD are inverted before forming the currency cross rate.")
+    st.write("IMF data: CPI (IMF.STA/CPI) and ER exchange rates (IMF.STA/ER), SDMX 3.0 API. Exchange rates are USD per domestic currency.")
