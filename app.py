@@ -38,7 +38,7 @@ st.caption("Monthly IMF data â€¢ nominal and inflation-adjusted exchange rates â
 
 @st.cache_data(ttl=24 * 3600, show_spinner=False)
 def imf_csv(flow, key):
-    url = f"{API}/{flow}/+/{key}"
+    url = f"{API}/{flow}/~/{key}"
     response = requests.get(url, params={"c[TIME_PERIOD]": "ge:1976-M01"},
                             headers={"Accept": "text/csv"}, timeout=55)
     response.raise_for_status()
